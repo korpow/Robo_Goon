@@ -113,8 +113,12 @@ botClient.on("message", async message => {
             break;
           }
           if (config.notoRoles[args[1].toLowerCase()]) {
-            message.member.roles.add(config.notoRoles[args[1].toLowerCase()]).catch(console.error);
-            message.channel.send(`Notification Role \`${args[1].toLowerCase()}\` assigned.`)
+            message.member.roles.add(config.notoRoles[args[1].toLowerCase()]).then(() => {
+              message.channel.send(`Notification Role \`${args[1].toLowerCase()}\` assigned.`);
+            }).catch((err) => {
+              console.error(err);
+              message.channel.send(`:warning: Error: ${err.message} - member role assign failed.`);
+            });
           }
           else {
             message.channel.send(`Noto Role \`${args[1]}\` not found. No changes made.`);
@@ -127,8 +131,12 @@ botClient.on("message", async message => {
             break;
           }
           if (config.notoRoles[args[1].toLowerCase()]) {
-            message.member.roles.remove(config.notoRoles[args[1].toLowerCase()]).catch(console.error);
-            message.channel.send(`Notification Role \`${args[1].toLowerCase()}\` removed.`)
+            message.member.roles.remove(config.notoRoles[args[1].toLowerCase()]).then(() => {
+              message.channel.send(`Notification Role \`${args[1].toLowerCase()}\` removed.`)
+            }).catch((err) => {
+              console.error(err);
+              message.channel.send(`:warning: Error: ${err.message} - member role removal failed.`);
+            });
           }
           else {
             message.channel.send(`Noto Role \`${args[1]}\` not found. No changes made.`);
@@ -148,7 +156,7 @@ botClient.on("message", async message => {
           let myRole = message.guild.roles.cache.find(role => role.name === "Robomin");
           let newNotoRole = message.mentions.roles.first();
           if (newNotoRole.position >= myRole.position) {
-            message.channel.send(`:warning: Role \`${newNotoRole.name.toLowerCase()}\` must be below **Robomin** before I can manage it.`);
+            message.channel.send(`:robot: Role \`${newNotoRole.name.toLowerCase()}\` must be below **Robomin** before I can manage it.`);
             break;
           }
 
