@@ -100,7 +100,7 @@ botClient.on("message", async message => {
       }
       switch (args[0]) {
         case "help":
-          message.channel.send(`Command: ${config.prefix}${command} [arg] {options} - notification squad self role management\`\`\`help         - This text\nlist         - List currently available notification roles\njoin {role}  - Get added to a noto role\nleave {role} - Remove an assigned noto role\nadd {roleid} - Add a role to the available list (robomin only)\ndel {role}   - Remove a role from the list (robomin only)\`\`\``);
+          message.channel.send(`Command: ${config.prefix}${command} [arg] {options} - notification squad self role management\`\`\`help         - This text\nlist         - List currently available notification roles\njoin {role}  - Get added to a noto role\nleave {role} - Remove an assigned noto role\nadd {@role} - Add a role to the available list (robomin only)\ndel {role}   - Remove a role from the list (robomin only)\`\`\``);
           break;
 
         case "list":
@@ -137,31 +137,34 @@ botClient.on("message", async message => {
 
         case "add":
           if (!(message.member.roles.cache.some(role => role.name === "Robomin") || message.member.permissions.has('ADMINISTRATOR'))) {
-            message.channel.send(`Sorry this command requires the \`Robomin\` role.`)
+            message.channel.send(`:no_entry: Sorry this command requires the \`Robomin\` role.`)
             break;
           }
-          if (args.length < 2) {
-            message.channel.send(`Argument missing - roleid`);
+          if (message.mentions.roles.size < 1) {
+            message.channel.send(`Argument missing - @Role Mention`);
             break;
           }
-          let foundRole = await message.guild.roles.fetch(args[1]);
-          if (!foundRole) {
-            message.channel.send(`Unable to lookup roleid, please try again.`);
+
+          let myRole = message.guild.roles.cache.find(role => role.name === "Robomin");
+          let newNotoRole = message.mentions.roles.first();
+          if (newNotoRole.position >= myRole.position) {
+            message.channel.send(`:warning: Role \`${newNotoRole.name.toLowerCase()}\` must be below **Robomin** before I can manage it.`);
             break;
           }
-          if (!config.notoRoles[foundRole.name.toLowerCase()]) {
-            config.notoRoles[foundRole.name.toLowerCase()] = foundRole.id;
+
+          if (!config.notoRoles[newNotoRole.name.toLowerCase()]) {
+            config.notoRoles[newNotoRole.name.toLowerCase()] = newNotoRole.id;
             SaveDiscordBotConfig();
-            message.channel.send(`Role \`${foundRole.name.toLowerCase()}\` has been added to available Noto Roles`);
+            message.channel.send(`Role \`${newNotoRole.name.toLowerCase()}\` has been added to available Noto Roles.`);
           }
           else {
-            message.channel.send(`A \`${foundRole.name.toLowerCase()}\` Noto Role already exists please delete first if you wish to change the id`);
+            message.channel.send(`A \`${newNotoRole.name.toLowerCase()}\` Noto Role already exists please delete first if you wish to change the id.`);
           }
           break;
 
         case "del":
           if (!(message.member.roles.cache.some(role => role.name === "Robomin") || message.member.permissions.has('ADMINISTRATOR'))) {
-            message.channel.send(`Sorry this command requires the \`Robomin\` role.`)
+            message.channel.send(`:no_entry: Sorry this command requires the \`Robomin\` role.`)
             break;
           }
           if (args.length < 2) {
