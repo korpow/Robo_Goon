@@ -7,6 +7,8 @@ const secrets = require("./secrets.json");
 // secrets.token contains the bot's token
 var config = {
   prefix: ".",
+  botSelfRole: "Robomin",
+  botAdminRole: "Robomin",
   notoRoles: {}
 };
 
@@ -18,7 +20,7 @@ function LoadDiscordBotConfig() {
       SaveDiscordBotConfig();
     }
     else {
-      config = JSON.parse(data);
+      Object.assign(config, JSON.parse(data));
     }
   });
 }
@@ -111,7 +113,7 @@ botClient.on("message", async message => {
       }
       switch (args[0]) {
         case "help":
-          message.channel.send(`Command: ${config.prefix}${command} [arg] {options} - notification squad self role management\`\`\`help         - This text\nlist         - List currently available notification roles\njoin {role}  - Get added to a noto role\nleave {role} - Remove an assigned noto role\nadd {@role} - Add a role to the available list (robomin only)\ndel {role}   - Remove a role from the list (robomin only)\`\`\``);
+          message.channel.send(`Command: ${config.prefix}${command} [arg] {options} - notification squad self role management\`\`\`help         - This text\nlist         - List currently available notification roles\njoin {role}  - Get added to a noto role\nleave {role} - Remove an assigned noto role\nadd {@role} - Add a role to the available list (${config.botAdminRole} only)\ndel {role}   - Remove a role from the list (${config.botAdminRole} only)\`\`\``);
           break;
 
         case "list":
@@ -155,8 +157,8 @@ botClient.on("message", async message => {
           break;
 
         case "add":
-          if (!(message.member.roles.cache.some(role => role.name === "Robomin") || message.member.permissions.has('ADMINISTRATOR'))) {
-            message.channel.send(`:no_entry: Sorry this command requires the \`Robomin\` role.`)
+          if (!(message.member.roles.cache.some(role => role.name === config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
+            message.channel.send(`:no_entry: Sorry this command requires the \`${config.botAdminRole}\` role.`)
             break;
           }
           if (message.mentions.roles.size < 1) {
@@ -164,10 +166,10 @@ botClient.on("message", async message => {
             break;
           }
 
-          let myRole = message.guild.roles.cache.find(role => role.name === "Robomin");
+          let myRole = message.guild.roles.cache.find(role => role.name === config.botSelfRole);
           let newNotoRole = message.mentions.roles.first();
           if (newNotoRole.position >= myRole.position) {
-            message.channel.send(`:robot: Role \`${newNotoRole.name.toLowerCase()}\` must be below **Robomin** before I can manage it.`);
+            message.channel.send(`:robot: Role \`${newNotoRole.name.toLowerCase()}\` must be below **${config.botSelfRole}** before I can manage it.`);
             break;
           }
 
@@ -182,8 +184,8 @@ botClient.on("message", async message => {
           break;
 
         case "del":
-          if (!(message.member.roles.cache.some(role => role.name === "Robomin") || message.member.permissions.has('ADMINISTRATOR'))) {
-            message.channel.send(`:no_entry: Sorry this command requires the \`Robomin\` role.`)
+          if (!(message.member.roles.cache.some(role => role.name === config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
+            message.channel.send(`:no_entry: Sorry this command requires the \`${config.botAdminRole}\` role.`)
             break;
           }
           if (args.length < 2) {
