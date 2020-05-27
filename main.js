@@ -2,7 +2,7 @@ console.log('Bot starting.')
 
 const Discord = require("discord.js");
 const fs = require('fs');
-
+const { spawn } = require('child_process');
 const secrets = require("./secrets.json");
 // secrets.token contains the bot's token
 var config = {
@@ -41,6 +41,13 @@ function ParseArgs(argsString) {
     return p;
   }, { a: [''] }).a
 }
+
+const gitCurrCommit = spawn('git', ['show', '--oneline', '-s']);
+var githash = ''; // feel free to improve the var and command name
+
+gitCurrCommit.stdout.on('data', (data) => {
+  githash = data;
+});
 
 const botClient = new Discord.Client();
 
@@ -84,6 +91,10 @@ botClient.on("message", async message => {
     if (command === "reload") {
       LoadDiscordBotConfig();
       message.channel.send("Reload complete.");
+    }
+
+    if (command === "githash" || command === "revision") {
+      message.channel.send(`Latest commit at runtime: ${githash}`);
     }
 
     if (message.channel.type === 'dm') {
