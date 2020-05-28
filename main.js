@@ -9,6 +9,7 @@ var config = {
   prefix: ".",
   botSelfRole: "Robomin",
   botAdminRole: "Robomin",
+  githubLogUrl: "",
   notoRoles: {}
 };
 
@@ -105,7 +106,8 @@ botClient.on("message", async message => {
     }
 
     if (command === "githash" || command === "revision") {
-      message.channel.send(`Latest commit${(!githash.workingClean) ? " __*w/changes*__" : ""} = \`${githash.log}\``);
+      config.githubLogUrl = ""; // todo: delete this line when discord supports inline named link Markdown
+      message.channel.send(`Latest ${(config.githubLogUrl) ? `[commit](${config.githubLogUrl + githash.log.substr(0, 7)})` : "commit" }${(!githash.workingClean) ? " __*w/changes*__" : ""} = \`${githash.log}\``);
     }
 
     if (message.channel.type === 'dm') {
