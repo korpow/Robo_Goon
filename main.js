@@ -44,11 +44,20 @@ function ParseArgs(argsString) {
   }, { a: [''] }).a
 }
 
-const gitCurrCommit = spawn('git', ['show', '--oneline', '-s']);
-var githash = ''; // feel free to improve the var and command name
+// feel free to improve the var and command name
+var githash = {
+  log: "",
+  workingClean: true
+};
+const gitLatestLog = spawn('git', ['log', `--pretty=format:'%h(%cn) - %s'`, '-n 1']);
+const gitIsWorkingClean = spawn('git', ['status', '--porcelain']);
 
-gitCurrCommit.stdout.on('data', (data) => {
-  githash = data;
+gitLatestLog.stdout.on('data', (data) => {
+  githash.log = data.toString().replace(/^'(.*)'$/, '$1');
+});
+gitIsWorkingClean.stdout.on('data', () => {
+  // if --porcelain outputs anything then the working dir is dirty
+  githash.workingClean = false;
 });
 
 const botClient = new Discord.Client();
@@ -96,7 +105,7 @@ botClient.on("message", async message => {
     }
 
     if (command === "githash" || command === "revision") {
-      message.channel.send(`Latest commit at runtime: ${githash}`);
+      message.channel.send(`Latest commit${(!githash.workingClean) ? " __*w/changes*__" : ""} = \`${githash.log}\``);
     }
 
     if (message.channel.type === 'dm') {
