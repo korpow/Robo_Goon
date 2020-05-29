@@ -107,7 +107,7 @@ botClient.on("message", async message => {
 
     if (command === "githash" || command === "revision") {
       config.githubLogUrl = ""; // todo: delete this line when discord supports inline named link Markdown
-      message.channel.send(`Latest ${(config.githubLogUrl) ? `[commit](${config.githubLogUrl + githash.log.substr(0, 7)})` : "commit" }${(!githash.workingClean) ? " __*w/changes*__" : ""} = \`${githash.log}\``);
+      message.channel.send(`Running ${(config.githubLogUrl) ? `[commit](${config.githubLogUrl + githash.log.substr(0, 7)})` : "commit" }${(!githash.workingClean) ? " __*w/changes*__" : ""} = \`${githash.log}\``);
     }
 
     if (message.channel.type === 'dm') {
@@ -128,12 +128,12 @@ botClient.on("message", async message => {
           break;
 
         case "list":
-          message.channel.send(`Active Notification Roles: ${(Object.keys(config.notoRoles).length < 1) ? "None 😢" : Object.keys(config.notoRoles).join(", ")}`);
+          message.channel.send(`Active Notification Roles: ${(Object.keys(config.notoRoles).length < 1) ? "None 😢" : Object.keys(config.notoRoles).sort().join(", ")}`);
           break;
 
         case "join":
           if (args.length < 2) {
-            message.channel.send(`Argument missing - Role name. Active Noto Roles: ${(Object.keys(config.notoRoles).length < 1) ? "None 😢" : Object.keys(config.notoRoles).join(", ")}`);
+            message.channel.send(`Argument missing - Role name. Active Noto Roles: ${(Object.keys(config.notoRoles).length < 1) ? "None 😢" : Object.keys(config.notoRoles).sort().join(", ")}`);
             break;
           }
           if (config.notoRoles[args[1].toLowerCase()]) {
@@ -151,7 +151,7 @@ botClient.on("message", async message => {
 
         case "leave":
           if (args.length < 2) {
-            message.channel.send(`Argument missing - Role name. Active Noto Roles: ${(Object.keys(config.notoRoles).length < 1) ? "None 😢" : Object.keys(config.notoRoles).join(", ")}`);
+            message.channel.send(`Argument missing - Role name. Active Noto Roles: ${(Object.keys(config.notoRoles).length < 1) ? "None 😢" : Object.keys(config.notoRoles).sort().join(", ")}`);
             break;
           }
           if (config.notoRoles[args[1].toLowerCase()]) {
