@@ -2,35 +2,11 @@ console.log('Bot starting.')
 
 const Discord = require("discord.js");
 const fs = require('fs');
-const { spawn } = require('child_process');
+const events = require('events');
+class BotEvents extends events { }
+const botEvents = new BotEvents;
 const secrets = require("./secrets.json");
 // secrets.token contains the bot's token
-var config = {
-  prefix: ".",
-  botSelfRole: "Robomin",
-  botAdminRole: "Robomin",
-  githubLogUrl: "",
-  notoRoles: {}
-};
-
-LoadDiscordBotConfig();
-
-function LoadDiscordBotConfig() {
-  fs.readFile('config.json', (err, data) => {
-    if (err) {
-      SaveDiscordBotConfig();
-    }
-    else {
-      Object.assign(config, JSON.parse(data));
-    }
-  });
-}
-
-function SaveDiscordBotConfig() {
-  fs.writeFile('config.json', JSON.stringify(config), (err) => {
-    if (err) throw err;
-  });
-}
 
 function ParseArgs(argsString) {
   return argsString.match(/\\?.|^$/g).reduce((p, c) => {
@@ -45,23 +21,56 @@ function ParseArgs(argsString) {
   }, { a: [''] }).a
 }
 
-// feel free to improve the var and command name
-var githash = {
-  log: "",
-  workingClean: true
-};
-const gitLatestLog = spawn('git', ['log', `--pretty=format:'%h(%cn) - %s'`, '-n 1']);
-const gitIsWorkingClean = spawn('git', ['status', '--porcelain']);
-
-gitLatestLog.stdout.on('data', (data) => {
-  githash.log = data.toString().replace(/^'(.*)'$/, '$1');
-});
-gitIsWorkingClean.stdout.on('data', () => {
-  // if --porcelain outputs anything then the working dir is dirty
-  githash.workingClean = false;
-});
-
 const botClient = new Discord.Client();
+
+botClient.config = {
+  prefix: ".",
+  botSelfRole: "Robomin",
+  botAdminRole: "Robomin",
+  githubLogUrl: "",
+  notoRoles: {}
+};
+botClient.commands = {};
+botClient.SaveConfig = () => {
+  fs.writeFile('config.json', JSON.stringify(botClient.config), (err) => {
+    if (err) throw err;
+  });
+}
+botClient.LoadConfig = () => {
+  fs.readFile('config.json', (err, data) => {
+    if (err) {
+      botClient.SaveConfig();
+    }
+    else {
+      Object.assign(botClient.config, JSON.parse(data));
+    }
+  });
+}
+botClient.LoadConfig();
+
+fs.readdir('./extensions/', (err, files) => {
+  if (err) console.error(err);
+  files = files.filter(f => f.endsWith('.js'));
+  console.log(`Found ${files.length} extensions.`);
+  files.forEach(f => {
+    let ext = require(`./extensions/${f}`);
+    console.log(`Loading extension: ${f}`);
+    if (ext.commands) {
+      if (Object.keys(botClient.commands).some(r => Object.keys(ext.commands).includes(r))) {
+        console.error(`Extension ${f} has conflicting commands causing overwrite`);
+      }
+      Object.assign(botClient.commands, ext.commands);
+    }
+    if (ext.onmessage) {
+      botEvents.on('onMessage', ext.onmessage);
+    }
+    if (ext.lateinit) {
+      botEvents.on('extLateInit', ext.lateinit);
+    }
+  });
+  console.log(`Extension loading complete.`);
+  botEvents.emit('extLateInit', botClient);
+});
 
 botClient.on("ready", () => {
   console.log(`Bot connected and ready.`);
@@ -80,14 +89,9 @@ botClient.on("message", async message => {
   if (message.author.bot)
     return;
 
-  // get the channel
-  const channel = message.channel;
-
   // check for command prefix
-  if (message.content.indexOf(config.prefix) !== 0) {
-    if (message.mentions.has(botClient.user)) { //@ the bot
-      message.channel.send(`Ready for action!`);
-    }
+  if (message.content.indexOf(botClient.config.prefix) !== 0) {
+    botEvents.emit('onMessage', botClient, message);
   } else {
     let command = '';
     let args = [];
@@ -101,43 +105,40 @@ botClient.on("message", async message => {
     }
 
     if (command === "reload") {
-      LoadDiscordBotConfig();
+      botClient.LoadConfig();
       message.channel.send("Reload complete.");
-    }
-
-    if (command === "githash" || command === "revision") {
-      config.githubLogUrl = ""; // todo: delete this line when discord supports inline named link Markdown
-      message.channel.send(`Running ${(config.githubLogUrl) ? `[commit](${config.githubLogUrl + githash.log.substr(0, 7)})` : "commit" }${(!githash.workingClean) ? " __*w/changes*__" : ""} = \`${githash.log}\``);
     }
 
     if (message.channel.type === 'dm') {
       return;
     }
-
+    if (botClient.commands[command]) {
+      botClient.commands[command](botClient, message, args);
+    }
     if (command === "help") {
       message.channel.send(`Commands: noto`);
     }
 
     if (command === "noto") {
       if (args.length < 1) {
-        message.channel.send(`Command \`${config.prefix}${command}\` requires an argument: help, list, join, leave, add, del`)
+        message.channel.send(`Command \`${botClient.config.prefix}${command}\` requires an argument: help, list, join, leave, add, del`)
       }
       switch (args[0]) {
         case "help":
-          message.channel.send(`Command: ${config.prefix}${command} [arg] {options} - notification squad self role management\`\`\`help         - This text\nlist         - List currently available notification roles\njoin {role}  - Get added to a noto role\nleave {role} - Remove an assigned noto role\nadd {@role} - Add a role to the available list (${config.botAdminRole} only)\ndel {role}   - Remove a role from the list (${config.botAdminRole} only)\`\`\``);
+          message.channel.send(`Command: ${botClient.config.prefix}${command} [arg] {options} - notification squad self role management\`\`\`help         - This text\nlist         - List currently available notification roles\njoin {role}  - Get added to a noto role\nleave {role} - Remove an assigned noto role\nadd {@role} - Add a role to the available list (${botClient.config.botAdminRole} only)\ndel {role}   - Remove a role from the list (${botClient.config.botAdminRole} only)\`\`\``);
           break;
 
         case "list":
-          message.channel.send(`Active Notification Roles: ${(Object.keys(config.notoRoles).length < 1) ? "None 😢" : Object.keys(config.notoRoles).sort().join(", ")}`);
+          message.channel.send(`Active Notification Roles: ${(Object.keys(botClient.config.notoRoles).length < 1) ? "None 😢" : Object.keys(botClient.config.notoRoles).sort().join(", ")}`);
           break;
 
         case "join":
           if (args.length < 2) {
-            message.channel.send(`Argument missing - Role name. Active Noto Roles: ${(Object.keys(config.notoRoles).length < 1) ? "None 😢" : Object.keys(config.notoRoles).sort().join(", ")}`);
+            message.channel.send(`Argument missing - Role name. Active Noto Roles: ${(Object.keys(botClient.config.notoRoles).length < 1) ? "None 😢" : Object.keys(botClient.config.notoRoles).sort().join(", ")}`);
             break;
           }
-          if (config.notoRoles[args[1].toLowerCase()]) {
-            message.member.roles.add(config.notoRoles[args[1].toLowerCase()]).then(() => {
+          if (botClient.config.notoRoles[args[1].toLowerCase()]) {
+            message.member.roles.add(botClient.config.notoRoles[args[1].toLowerCase()]).then(() => {
               message.channel.send(`Notification Role \`${args[1].toLowerCase()}\` assigned.`);
             }).catch((err) => {
               console.error(err);
@@ -151,11 +152,11 @@ botClient.on("message", async message => {
 
         case "leave":
           if (args.length < 2) {
-            message.channel.send(`Argument missing - Role name. Active Noto Roles: ${(Object.keys(config.notoRoles).length < 1) ? "None 😢" : Object.keys(config.notoRoles).sort().join(", ")}`);
+            message.channel.send(`Argument missing - Role name. Active Noto Roles: ${(Object.keys(botClient.config.notoRoles).length < 1) ? "None 😢" : Object.keys(botClient.config.notoRoles).sort().join(", ")}`);
             break;
           }
-          if (config.notoRoles[args[1].toLowerCase()]) {
-            message.member.roles.remove(config.notoRoles[args[1].toLowerCase()]).then(() => {
+          if (botClient.config.notoRoles[args[1].toLowerCase()]) {
+            message.member.roles.remove(botClient.config.notoRoles[args[1].toLowerCase()]).then(() => {
               message.channel.send(`Notification Role \`${args[1].toLowerCase()}\` removed.`)
             }).catch((err) => {
               console.error(err);
@@ -168,8 +169,8 @@ botClient.on("message", async message => {
           break;
 
         case "add":
-          if (!(message.member.roles.cache.some(role => role.name === config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
-            message.channel.send(`:no_entry: Sorry this command requires the \`${config.botAdminRole}\` role.`)
+          if (!(message.member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
+            message.channel.send(`:no_entry: Sorry this command requires the \`${botClient.config.botAdminRole}\` role.`)
             break;
           }
           if (message.mentions.roles.size < 1) {
@@ -177,16 +178,16 @@ botClient.on("message", async message => {
             break;
           }
 
-          let myRole = message.guild.roles.cache.find(role => role.name === config.botSelfRole);
+          let myRole = message.guild.roles.cache.find(role => role.name === botClient.config.botSelfRole);
           let newNotoRole = message.mentions.roles.first();
           if (newNotoRole.position >= myRole.position) {
-            message.channel.send(`:robot: Role \`${newNotoRole.name.toLowerCase()}\` must be below **${config.botSelfRole}** before I can manage it.`);
+            message.channel.send(`:robot: Role \`${newNotoRole.name.toLowerCase()}\` must be below **${botClient.config.botSelfRole}** before I can manage it.`);
             break;
           }
 
-          if (!config.notoRoles[newNotoRole.name.toLowerCase()]) {
-            config.notoRoles[newNotoRole.name.toLowerCase()] = newNotoRole.id;
-            SaveDiscordBotConfig();
+          if (!botClient.config.notoRoles[newNotoRole.name.toLowerCase()]) {
+            botClient.config.notoRoles[newNotoRole.name.toLowerCase()] = newNotoRole.id;
+            botClient.SaveConfig();
             message.channel.send(`Role \`${newNotoRole.name.toLowerCase()}\` has been added to available Noto Roles.`);
           }
           else {
@@ -195,17 +196,17 @@ botClient.on("message", async message => {
           break;
 
         case "del":
-          if (!(message.member.roles.cache.some(role => role.name === config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
-            message.channel.send(`:no_entry: Sorry this command requires the \`${config.botAdminRole}\` role.`)
+          if (!(message.member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
+            message.channel.send(`:no_entry: Sorry this command requires the \`${botClient.config.botAdminRole}\` role.`)
             break;
           }
           if (args.length < 2) {
             message.channel.send(`Argument missing - Role name`);
             break;
           }
-          if (config.notoRoles[args[1].toLowerCase()]) {
-            delete config.notoRoles[args[1].toLowerCase()]
-            SaveDiscordBotConfig();
+          if (botClient.config.notoRoles[args[1].toLowerCase()]) {
+            delete botClient.config.notoRoles[args[1].toLowerCase()]
+            botClient.SaveConfig();
             message.channel.send(`Noto Role \`${args[1].toLowerCase()}\` has been removed from available Noto Roles`);
           }
           else {
