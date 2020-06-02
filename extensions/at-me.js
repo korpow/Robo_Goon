@@ -8,6 +8,6 @@ const atBotAnswers = [
 
 exports.onmessage = (botClient, message) => {
   if (message.mentions.has(botClient.user)) { //@ the bot
-    message.channel.send(`${atBotAnswers[Math.floor(Math.random * atBotAnswers.length)]}`);
+    message.channel.send(`${atBotAnswers[Math.floor(Math.random() * atBotAnswers.length)]}`);
   }
 }
