@@ -1,8 +1,8 @@
 console.log('Bot starting.')
 
 const Discord = require("discord.js");
-const fs = require('fs');
-const events = require('events');
+const fs = require("fs");
+const events = require("events");
 class BotEvents extends events { }
 const botEvents = new BotEvents;
 const secrets = require("./secrets.json");
@@ -32,11 +32,14 @@ botClient.config = {
 };
 
 botClient.commands = {};
+botClient.IsBotAdmin = (member) => {
+  return member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR');
+};
 botClient.SaveConfig = () => {
   fs.writeFile('config.json', JSON.stringify(botClient.config), (err) => {
     if (err) throw err;
   });
-}
+};
 botClient.LoadConfig = () => {
   fs.readFile('config.json', (err, data) => {
     if (err) {
@@ -46,7 +49,7 @@ botClient.LoadConfig = () => {
       Object.assign(botClient.config, JSON.parse(data));
     }
   });
-}
+};
 botClient.LoadConfig();
 
 fs.readdir('./extensions/', (err, files) => {
@@ -58,9 +61,11 @@ fs.readdir('./extensions/', (err, files) => {
     console.log(`Loading extension: ${f}`);
     if (ext.commands) {
       if (Object.keys(botClient.commands).some(r => Object.keys(ext.commands).includes(r))) {
-        console.error(`Extension ${f} has conflicting commands causing overwrite`);
+        console.error(`Extension ${f} has conflicting commands. Skipping.`);
       }
-      Object.assign(botClient.commands, ext.commands);
+      else {
+        Object.assign(botClient.commands, ext.commands);
+      }
     }
     if (ext.onmessage) {
       botEvents.on('onMessage', ext.onmessage);
@@ -77,15 +82,15 @@ botClient.on("ready", () => {
   console.log(`Bot connected and ready.`);
 });
 
-botClient.on("guildCreate", guild => {
+botClient.on("guildCreate", (guild) => {
   console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
 });
 
-botClient.on("guildDelete", guild => {
+botClient.on("guildDelete", (guild) => {
   console.log(`I have been removed from: ${guild.name} (id: ${guild.id})`);
 });
 
-botClient.on("message", async message => {
+botClient.on("message", async (message) => {
   // don't reply to bots
   if (message.author.bot)
     return;
@@ -109,6 +114,9 @@ botClient.on("message", async message => {
 
     if (botClient.commands[command]) {
       botClient.commands[command](botClient, message, args);
+    }
+    else {
+      message.channel.send(`Command: \`${command}\` not found.`);
     }
   }
 });

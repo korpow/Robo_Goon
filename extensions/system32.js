@@ -9,8 +9,8 @@ function HelpCommand(botClient, message) {
 }
 
 function ReloadCommand(botClient, message) {
-  if (!(message.member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
-    message.channel.send(`:no_entry: Sorry you do not have permission to do that. I live on.`)
+  if (!botClient.IsBotAdmin(message.member)) {
+    message.channel.send(`Sorry you do not have permission to reload.`)
     return;
   }
   botClient.LoadConfig();
@@ -18,10 +18,11 @@ function ReloadCommand(botClient, message) {
 }
 
 function KillCommand(botClient, message) {
-  if (!(message.member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
+  if (!botClient.IsBotAdmin(message.member)) {
     message.channel.send(`:no_entry: Sorry you do not have permission to do that. I live on.`)
     return;
   }
   console.warn(`Got kill/terminate command from ${message.author.tag}`);
+  botClient.destroy();
   process.exit();
 }

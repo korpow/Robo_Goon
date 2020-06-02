@@ -52,7 +52,7 @@ function NotoCommand(botClient, message, args) {
       break;
 
     case "add":
-      if (!(message.member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
+      if (!botClient.IsBotAdmin(message.member)) {
         message.channel.send(`:no_entry: Sorry this command requires the \`${botClient.config.botAdminRole}\` role.`)
         break;
       }
@@ -79,7 +79,7 @@ function NotoCommand(botClient, message, args) {
       break;
 
     case "del":
-      if (!(message.member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR'))) {
+      if (!botClient.IsBotAdmin(message.member)) {
         message.channel.send(`:no_entry: Sorry this command requires the \`${botClient.config.botAdminRole}\` role.`)
         break;
       }
