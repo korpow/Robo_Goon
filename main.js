@@ -28,7 +28,8 @@ botClient.config = {
   botSelfRole: "Robomin",
   botAdminRole: "Robomin",
   githubLogUrl: "",
-  notoRoles: {}
+  notoRoles: {},
+  customCommands: {}
 };
 
 botClient.commands = {};
@@ -43,14 +44,21 @@ botClient.SaveConfig = () => {
 botClient.LoadConfig = () => {
   fs.readFile('config.json', (err, data) => {
     if (err) {
-      botClient.SaveConfig();
+      console.error(err);
     }
     else {
       Object.assign(botClient.config, JSON.parse(data));
     }
   });
 };
-botClient.LoadConfig();
+// initially load config syncronosly so it is available for extension lateinit
+try {
+  botClient.config = JSON.parse(fs.readFileSync('config.json'));
+}
+catch {
+  console.warn(`config.json is missing, creating now.`);
+  botClient.SaveConfig();
+}
 
 fs.readdir('./extensions/', (err, files) => {
   if (err) console.error(err);
@@ -58,7 +66,7 @@ fs.readdir('./extensions/', (err, files) => {
   console.log(`Found ${files.length} extensions.`);
   files.forEach(f => {
     let ext = require(`./extensions/${f}`);
-    console.log(`Loading extension: ${f}`);
+    console.log(`Loading: ${f}`);
     if (ext.commands) {
       if (Object.keys(botClient.commands).some(r => Object.keys(ext.commands).includes(r))) {
         console.error(`Extension ${f} has conflicting commands. Skipping.`);
