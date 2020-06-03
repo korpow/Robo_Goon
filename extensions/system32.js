@@ -17,12 +17,15 @@ function ReloadCommand(botClient, message) {
   message.channel.send("Reload complete.");
 }
 
-function KillCommand(botClient, message) {
+function KillCommand(botClient, message, args) {
   if (!botClient.IsBotAdmin(message.member)) {
     message.channel.send(`:no_entry: Sorry you do not have permission to do that. I live on.`)
     return;
   }
   console.warn(`Got kill/terminate command from ${message.author.tag}`);
   botClient.destroy();
-  process.exit();
+  if (args[0] === 'clean')
+    process.exit();
+  else 
+    process.exit(1); // use code 1 "fail" by default so that nodemon automatically restarts the bot
 }
