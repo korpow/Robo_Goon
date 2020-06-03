@@ -53,7 +53,7 @@ botClient.LoadConfig = () => {
 };
 // initially load config syncronosly so it is available for extension lateinit
 try {
-  botClient.config = JSON.parse(fs.readFileSync('config.json'));
+  Object.assign(botClient.config, JSON.parse(fs.readFileSync('config.json')));
 }
 catch {
   console.warn(`config.json is missing, creating now.`);
