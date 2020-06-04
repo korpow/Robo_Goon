@@ -24,8 +24,8 @@ function KillCommand(botClient, message, args) {
   }
   console.warn(`Got kill/terminate command from ${message.author.tag}`);
   botClient.destroy();
-  if (args[0] === 'clean')
+  if (args[0] === 'service')
     process.exit();
-  else 
+  else
     process.exit(1); // use code 1 "fail" by default so that nodemon automatically restarts the bot
 }

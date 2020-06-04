@@ -1,7 +1,10 @@
+//  optional: called when the user types {prefix}examplecommand in chat
 exports.commands = {
-  examplecommand: (botClient, message, args) => {} // called when the user types {prefix}examplecommand in chat
+  examplecommand: (botClient, message, args) => {}
 };
 
-exports.onmessage = (botClient, message) => {} // added to the main onMessage event called for any message in a guild channel and not from a bot
+// optional: called during message event for any in a guild channel and not from a bot, borderline unnecessary
+exports.OnMessage = (botClient, message) => {}
 
-exports.lateinit = (botClient) => {} // added to an event called after all extensions are loaded
+// optional: added to an event called after all extensions are loaded can directly listen to botClient events
+exports.Init = (botClient) => {}

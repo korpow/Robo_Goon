@@ -2,7 +2,7 @@ exports.commands = {
   noto: NotoCommand
 };
 
-function NotoCommand(botClient, message, args) {
+async function NotoCommand(botClient, message, args) {
   if (args.length < 1) {
     message.channel.send(`Command \`${botClient.config.prefix}noto\` requires an argument: help, list, join, leave, add, del`);
     return;
@@ -10,7 +10,7 @@ function NotoCommand(botClient, message, args) {
   let foundNoto;
   switch (args[0]) {
     case "help":
-      message.channel.send(`noto command help: ${botClient.config.prefix}noto [arg] {options} - notification squad self role management\`\`\`help         - This text\nlist         - List currently available notification roles\njoin {role}  - Get added to a noto role\nleave {role} - Remove an assigned noto role\nadd {@role} - Add a role to the available list (${botClient.config.botAdminRole} only)\ndel {role}   - Remove a role from the list (${botClient.config.botAdminRole} only)\`\`\``);
+      message.channel.send(`Command noto help: ${botClient.config.prefix}noto [arg] {options} - notification squad self role management\`\`\`help         - This text\nlist         - List currently available notification roles\njoin {role}  - Get added to a noto role\nleave {role} - Remove an assigned noto role\nadd {@role} - Add the mentioned role, or id, to the available list (${botClient.config.botAdminRole} only)\ndel {role}   - Remove a role from the list (${botClient.config.botAdminRole} only)\`\`\``);
       break;
 
     case "list":
@@ -60,13 +60,22 @@ function NotoCommand(botClient, message, args) {
         message.channel.send(`Sorry you do not have permission to do that.`);
         break;
       }
-      if (message.mentions.roles.size < 1) {
-        message.channel.send(`Argument missing - @Role Mention`);
+      if (args.length < 2) {
+        message.channel.send(`Argument missing - @Role mention or snowflake id`);
         break;
       }
 
       let myRole = message.guild.roles.cache.find(role => role.name === botClient.config.botSelfRole);
       let newNotoRole = message.mentions.roles.first();
+
+      if (!newNotoRole) {
+        newNotoRole = await message.guild.roles.fetch(args[1]);
+      }
+      if (!newNotoRole) {
+        message.channel.send(`Unable to lookup @Role mention or id, please try again.`);
+        break;
+      }
+
       if (newNotoRole.position >= myRole.position) {
         message.channel.send(`:robot: Role **${newNotoRole.name}** must be below **${botClient.config.botSelfRole}** before I can manage it.`);
         break;
@@ -79,7 +88,7 @@ function NotoCommand(botClient, message, args) {
         message.channel.send(`Role **${newNotoRole.name}** has been added to the list.`);
       }
       else {
-        message.channel.send(`A **${newNotoRole.name}** Noto Role already exists please delete first if you wish to change the id.`);
+        message.channel.send(`A **${newNotoRole.name}** Noto Role already exists please delete first if you wish to change it.`);
       }
       break;
 

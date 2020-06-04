@@ -1,4 +1,4 @@
-exports.lateinit = (botClient) => {
+exports.Init = (botClient) => {
   Object.keys(botClient.config.customCommands).forEach(custCommand => {
     if (!botClient.commands[custCommand]) {
       botClient.commands[custCommand] = (botClient, message) => {
@@ -6,7 +6,7 @@ exports.lateinit = (botClient) => {
       };
     }
     else {
-      console.warn(`Skipping loading custom command '${custCommand}' as it would conflict with an extension.`);
+      console.warn(`Skipping loading custom command '${custCommand}' as it would conflict with a loaded extension.`);
     }
   });
 };
@@ -24,10 +24,10 @@ function CustomCommandsCommand(botClient, message, args) {
     message.channel.send(`Sorry custom commands only support #channel mentions.`);
     return;
   }
-  
+
   switch (args[0]) {
     case "help":
-      message.channel.send(`cc command help: ${botClient.config.prefix}cc [arg] {options} - custom commands management\`\`\`help                    - This text\nlist                    - List current custom commands\nadd {command} {reply}   - Add a new custom command\nupdate {command} {reply}- Update an existing custom command\ndel {command}           - Remove a custom command\`\`\``);
+      message.channel.send(`Command cc help: ${botClient.config.prefix}cc [arg] {options} - custom commands management\`\`\`help                     - This text\nlist                     - List current custom commands\nadd {command} {reply}    - Add a new custom command\nupdate {command} {reply} - Update an existing custom command\ndel {command}            - Remove a custom command\`\`\``);
       break;
 
     case "list":

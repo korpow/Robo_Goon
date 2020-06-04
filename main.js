@@ -37,7 +37,7 @@ botClient.IsBotAdmin = (member) => {
   return member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR');
 };
 botClient.SaveConfig = () => {
-  fs.writeFile('config.json', JSON.stringify(botClient.config), (err) => {
+  fs.writeFile('config.json', JSON.stringify(botClient.config, null, 2), (err) => {
     if (err) throw err;
   });
 };
@@ -68,45 +68,43 @@ fs.readdir('./extensions/', (err, files) => {
     let ext = require(`./extensions/${f}`);
     console.log(`Loading: ${f}`);
     if (ext.commands) {
-      if (Object.keys(botClient.commands).some(r => Object.keys(ext.commands).includes(r))) {
+      if (Object.keys(botClient.commands).some(key => Object.keys(ext.commands).includes(key))) {
         console.error(`Extension ${f} has conflicting commands. Skipping.`);
       }
       else {
         Object.assign(botClient.commands, ext.commands);
       }
     }
-    if (ext.onmessage) {
-      botEvents.on('onMessage', ext.onmessage);
+    if (ext.OnMessage) {
+      botEvents.on('onMessage', ext.OnMessage);
     }
-    if (ext.lateinit) {
-      botEvents.on('extLateInit', ext.lateinit);
+    if (ext.Init) {
+      botEvents.on('extInit', ext.Init);
     }
   });
-  botEvents.emit('extLateInit', botClient);
-  console.log(`Extension loading complete.`);
+  botEvents.emit('extInit', botClient);
+  console.log(`Extension loading complete!`);
 });
 
-botClient.on("ready", () => {
-  console.log(`Bot connected and ready.`);
+botClient.on('ready', () => {
+  console.log(`Bot client connection ready!`);
 });
 
-botClient.on("guildCreate", (guild) => {
+botClient.on('guildCreate', (guild) => {
   console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
 });
 
-botClient.on("guildDelete", (guild) => {
+botClient.on('guildDelete', (guild) => {
   console.log(`I have been removed from: ${guild.name} (id: ${guild.id})`);
 });
 
-botClient.on("message", async (message) => {
-  // don't reply to bots
-  if (message.author.bot)
-    return;
-  if (message.channel.type === 'dm')
+botClient.on('message', (message) => {
+  // don't listen to bots, or DMs
+  if (message.author.bot || message.channel.type === 'dm')
     return;
   // check for command prefix
   if (message.content.indexOf(botClient.config.prefix) !== 0) {
-    // send nomal messages to the extensions that care
+    // send normal messages to all extensions that care
     botEvents.emit('onMessage', botClient, message);
   } else {
     // we got one, parse command and args

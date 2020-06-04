@@ -7,7 +7,7 @@ const atBotAnswers = [
   "I need a drink."
 ];
 
-exports.onmessage = (botClient, message) => {
+exports.OnMessage = (botClient, message) => {
   if (message.mentions.users.has(botClient.user.id)) { //@ the bot
     message.channel.send(`${atBotAnswers[Math.floor(Math.random() * atBotAnswers.length)]}`);
   }
