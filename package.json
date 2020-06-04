@@ -1,12 +1,14 @@
 {
-  "name": "robo_goon",
+  "name": "robo-goon",
   "version": "1.0.0",
-  "description": "",
+  "description": "Yet another extensible discord.js based bot.",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Kory",
+  "author": "Kory Powell",
+  "contributors": [],
+  "homepage": "https://github.com/korpow/robo-goon",
   "license": "MIT",
   "dependencies": {
     "discord.js": "^12.2.0"
