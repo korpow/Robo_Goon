@@ -1,4 +1,4 @@
-//  optional: called when the user types {prefix}examplecommand in chat
+// optional: called when the user types {prefix}examplecommand in chat
 exports.commands = {
   examplecommand: (botClient, message, args) => {}
 };

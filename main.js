@@ -111,11 +111,11 @@ botClient.on('message', (message) => {
     let command = '';
     let args = [];
     if (message.content.split(' ').length > 1) {
-      command = message.content.split(' ')[0].substring(1);
+      command = message.content.split(' ')[0].substring(1).toLowerCase();
       args = ParseArgs(message.content.substring(message.content.indexOf(' ') + 1));
     }
     else {
-      command = message.content.substring(1);
+      command = message.content.substring(1).toLowerCase();
     }
 
     if (botClient.commands[command]) {

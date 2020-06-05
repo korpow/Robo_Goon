@@ -2,24 +2,28 @@ exports.commands = {
   noto: NotoCommand
 };
 
+function ListNotoRoles(botClient) {
+  return (Object.keys(botClient.config.notoRoles).length < 1) ? "None 😢" : Object.keys(botClient.config.notoRoles).sort().join(", ");
+}
+
 async function NotoCommand(botClient, message, args) {
   if (args.length < 1) {
     message.channel.send(`Command \`${botClient.config.prefix}noto\` requires an argument: help, list, join, leave, add, del`);
     return;
   }
   let foundNoto;
-  switch (args[0]) {
+  switch (args[0].toLowerCase()) {
     case "help":
       message.channel.send(`Command noto help: ${botClient.config.prefix}noto [arg] {options} - notification squad self role management\`\`\`help         - This text\nlist         - List currently available notification roles\njoin {role}  - Get added to a noto role\nleave {role} - Remove an assigned noto role\nadd {@role} - Add the mentioned role, or id, to the available list (${botClient.config.botAdminRole} only)\ndel {role}   - Remove a role from the list (${botClient.config.botAdminRole} only)\`\`\``);
       break;
 
     case "list":
-      message.channel.send(`Notification Roles List: ${(Object.keys(botClient.config.notoRoles).length < 1) ? "None 😢" : Object.keys(botClient.config.notoRoles).sort().join(", ")}`);
+      message.channel.send(`Notification Roles List: **${ListNotoRoles(botClient)}**`);
       break;
 
     case "join":
       if (args.length < 2) {
-        message.channel.send(`Argument missing - Role name. Joinable Noto Roles: ${(Object.keys(botClient.config.notoRoles).length < 1) ? "None 😢" : Object.keys(botClient.config.notoRoles).sort().join(", ")}`);
+        message.channel.send(`Arg __join__ requires parameter: Role name. Joinable Noto Roles: **${ListNotoRoles(botClient)}**`);
         break;
       }
       foundNoto = Object.keys(botClient.config.notoRoles).find(role => role.toLowerCase() === args[1].toLowerCase());
@@ -38,7 +42,7 @@ async function NotoCommand(botClient, message, args) {
 
     case "leave":
       if (args.length < 2) {
-        message.channel.send(`Argument missing - Role name. Active Noto Roles: ${(Object.keys(botClient.config.notoRoles).length < 1) ? "None 😢" : Object.keys(botClient.config.notoRoles).sort().join(", ")}`);
+        message.channel.send(`Arg __leave__ requires parameter: Role name. Leavable Noto Roles: **${ListNotoRoles(botClient)}**`);
         break;
       }
       foundNoto = Object.keys(botClient.config.notoRoles).find(role => role.toLowerCase() === args[1].toLowerCase());
@@ -61,7 +65,7 @@ async function NotoCommand(botClient, message, args) {
         break;
       }
       if (args.length < 2) {
-        message.channel.send(`Argument missing - @Role mention or snowflake id`);
+        message.channel.send(`Arg __add__ requires parameter: @Role mention or snowflake id`);
         break;
       }
 
@@ -98,7 +102,7 @@ async function NotoCommand(botClient, message, args) {
         break;
       }
       if (args.length < 2) {
-        message.channel.send(`Argument missing - Role name`);
+        message.channel.send(`Arg __del__ requires parameter: Role name`);
         break;
       }
       foundNoto = Object.keys(botClient.config.notoRoles).find(role => role.toLowerCase() === args[1].toLowerCase());

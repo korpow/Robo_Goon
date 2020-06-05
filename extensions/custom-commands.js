@@ -25,7 +25,7 @@ function CustomCommandsCommand(botClient, message, args) {
     return;
   }
 
-  switch (args[0]) {
+  switch (args[0].toLowerCase()) {
     case "help":
       message.channel.send(`Command cc help: ${botClient.config.prefix}cc [arg] {options} - custom commands management\`\`\`help                     - This text\nlist                     - List current custom commands\nadd {command} {reply}    - Add a new custom command\nupdate {command} {reply} - Update an existing custom command\ndel {command}            - Remove a custom command\`\`\``);
       break;
@@ -35,6 +35,11 @@ function CustomCommandsCommand(botClient, message, args) {
       break;
 
     case "add":
+      if (args.length < 3) {
+        message.channel.send(`Arg __add__ requires parameters: command name, reply`);
+        break;
+      }
+      args[1] = args[1].toLowerCase();
       if (botClient.commands[args[1]]) {
         message.channel.send(`A **${args[1]}** command already exists.`);
         break;
@@ -48,6 +53,11 @@ function CustomCommandsCommand(botClient, message, args) {
       break;
 
     case "update":
+      if (args.length < 3) {
+        message.channel.send(`Arg __update__ requires parameters: command name, reply`);
+        break;
+      }
+      args[1] = args[1].toLowerCase();
       if (!botClient.config.customCommands[args[1]]) {
         message.channel.send(`Custom command **${args[1]}** does not exist.`);
         break;
@@ -61,6 +71,11 @@ function CustomCommandsCommand(botClient, message, args) {
       break;
 
     case "del":
+      if (args.length < 2) {
+        message.channel.send(`Arg __del__ requires parameter: command name`);
+        break;
+      }
+      args[1] = args[1].toLowerCase();
       if (!botClient.config.customCommands[args[1]]) {
         message.channel.send(`Custom command **${args[1]}** does not exist.`);
         break;
