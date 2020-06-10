@@ -14,7 +14,7 @@ function ReloadCommand(botClient, message) {
     return;
   }
   botClient.LoadConfig();
-  message.channel.send("Reload complete.");
+  message.channel.send("Reloading, cover me!");
 }
 
 function KillCommand(botClient, message, args) {

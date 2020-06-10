@@ -51,7 +51,7 @@ botClient.LoadConfig = () => {
     }
   });
 };
-// initially load config syncronosly so it is available for extension lateinit
+// initially load config syncronosly so it is available for extension Init
 try {
   Object.assign(botClient.config, JSON.parse(fs.readFileSync('config.json')));
 }
@@ -103,19 +103,20 @@ botClient.on('message', (message) => {
   if (message.author.bot || message.channel.type === 'dm')
     return;
   // check for command prefix
-  if (message.content.indexOf(botClient.config.prefix) !== 0) {
+  if (typeof(botClient.config.prefix) !== 'string' || message.content.indexOf(botClient.config.prefix) !== 0) {
     // send normal messages to all extensions that care
     botEvents.emit('onMessage', botClient, message);
-  } else {
+  }
+  else {
     // we got one, parse command and args
     let command = '';
     let args = [];
     if (message.content.split(' ').length > 1) {
-      command = message.content.split(' ')[0].substring(1).toLowerCase();
+      command = message.content.split(' ')[0].substring(botClient.config.prefix.length).toLowerCase();
       args = ParseArgs(message.content.substring(message.content.indexOf(' ') + 1));
     }
     else {
-      command = message.content.substring(1).toLowerCase();
+      command = message.content.substring(botClient.config.prefix.length).toLowerCase();
     }
 
     if (botClient.commands[command]) {

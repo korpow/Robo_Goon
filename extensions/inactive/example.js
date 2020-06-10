@@ -3,8 +3,8 @@ exports.commands = {
   examplecommand: (botClient, message, args) => {}
 };
 
-// optional: called during message event for any in a guild channel and not from a bot, borderline unnecessary
+// optional: called during botClient message events if in a guild channel, not from a bot, and not a command
 exports.OnMessage = (botClient, message) => {}
 
-// optional: added to an event called after all extensions are loaded can directly listen to botClient events
+// optional: added to an event called after all extensions are loaded
 exports.Init = (botClient) => {}
