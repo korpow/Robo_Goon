@@ -34,7 +34,7 @@ botClient.config = {
 
 botClient.commands = {};
 botClient.IsBotAdmin = (member) => {
-  return member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || message.member.permissions.has('ADMINISTRATOR');
+  return member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || member.permissions.has('MANAGE_GUILD');
 };
 botClient.SaveConfig = () => {
   fs.writeFile('config.json', JSON.stringify(botClient.config, null, 2), (err) => {

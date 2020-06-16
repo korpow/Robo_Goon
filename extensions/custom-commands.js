@@ -1,13 +1,15 @@
 exports.Init = (botClient) => {
   Object.keys(botClient.config.customCommands).forEach(custCommand => {
-    if (!botClient.commands[custCommand]) {
-      botClient.commands[custCommand] = (botClient, message) => {
-        message.channel.send(botClient.config.customCommands[custCommand]);
-      };
+    while (botClient.commands[custCommand]) {
+      console.warn(`Appending custom command '${custCommand}' (+'2') as it would conflict with a loaded extension.`);
+      let custAppended = `${custCommand}2`;
+      botClient.config.customCommands[custAppended] = botClient.config.customCommands[custCommand];
+      delete botClient.config.customCommands[custCommand];
+      custCommand = custAppended;
     }
-    else {
-      console.warn(`Skipping loading custom command '${custCommand}' as it would conflict with a loaded extension.`);
-    }
+    botClient.commands[custCommand] = (botClient, message) => {
+      message.channel.send(botClient.config.customCommands[custCommand]);
+    };
   });
 };
 
@@ -20,7 +22,7 @@ function CustomCommandsCommand(botClient, message, args) {
     message.channel.send(`Command \`${botClient.config.prefix}cc\` requires an argument: help, list, add, update, del`);
     return;
   }
-  else if (message.mentions.everyone || message.mentions.roles.size > 0 || message.mentions.users.size > 0){
+  else if (message.mentions.everyone || message.mentions.roles.size > 0 || message.mentions.users.size > 0) {
     message.channel.send(`Sorry custom commands only support #channel mentions.`);
     return;
   }
