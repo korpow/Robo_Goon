@@ -27,6 +27,7 @@ botClient.config = {
   prefix: ".",
   botSelfRole: "Robomin",
   botAdminRole: "Robomin",
+  missingCommandReply: true,
   githubLogUrl: "",
   notoRoles: {},
   customCommands: {}
@@ -122,7 +123,7 @@ botClient.on('message', (message) => {
     if (botClient.commands[command]) {
       botClient.commands[command](botClient, message, args);
     }
-    else {
+    else if (botClient.config.missingCommandReply) {
       message.channel.send(`Command: \`${command}\` not found.`);
     }
   }
