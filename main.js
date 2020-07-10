@@ -22,6 +22,7 @@ function ParseArgs(argsString) {
 }
 
 const botClient = new Discord.Client();
+botClient.options.disableMentions = 'everyone';
 
 botClient.config = {
   prefix: ".",
@@ -32,7 +33,6 @@ botClient.config = {
   customCommands: {},
   reminders: []
 };
-
 botClient.commands = {};
 botClient.IsBotAdmin = (member) => {
   return member.roles.cache.some(role => role.name === botClient.config.botAdminRole) || member.permissions.has('MANAGE_GUILD');
@@ -64,7 +64,7 @@ catch {
 fs.readdir('./extensions/', (err, files) => {
   if (err) console.error(err);
   files = files.filter(f => f.endsWith('.js'));
-  console.log(`Found ${files.length} extensions.`);
+  console.log(`Found ${files.length} active extensions.`);
   files.forEach(f => {
     let ext = require(`./extensions/${f}`);
     console.log(`Loading: ${f}`);

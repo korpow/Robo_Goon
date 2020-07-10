@@ -6,5 +6,5 @@ exports.commands = {
 // optional: called during botClient message events if in a guild channel, not from a bot, and not a command
 exports.OnMessage = (botClient, message) => {}
 
-// optional: added to an event called after all extensions are loaded
+// optional: added to an event called after all extensions are loaded and the botClient is online
 exports.Init = (botClient) => {}

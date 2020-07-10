@@ -1,6 +1,6 @@
 const { format } = require('fecha');
-const SEC = 1000, MIN = SEC * 60, HOUR = MIN * 60, DAY = HOUR * 24, WEEK = 7 * DAY, YEAR = 365 * DAY;
-var activeTimeouts = {};
+const SEC = 1000, MIN = 60 * SEC, HOUR = 60 * MIN, DAY = 24 * HOUR, WEEK = 7 * DAY, YEAR = 365 * DAY;
+const activeTimeouts = {};
 
 exports.Init = (botClient) => {
   CheckForUpcoming(botClient);
@@ -16,18 +16,18 @@ exports.commands = {
 };
 
 function RemindmeCommand(botClient, message, args) {
-  // todo: add help, list, and forget arguments
+  // todo: add count, help, list, and forget arguments
   if (args.length < 2) {
-    message.channel.send(`Arguments Missing: Usage **${botClient.config.prefix}remindme** [how long ex. 4h20m / timestamp] *things to remember*`);
+    message.channel.send(`Usage **${botClient.config.prefix}remindme** [how long: 4h20m / timestamp] *thing to remember*`);
     return;
   }
   SaveReminder(botClient, message.channel, args[0], `<@!${message.author.id}>`, args.slice(1).join(' '));
 }
 
 function RemindroleCommand(botClient, message, args) {
-  // todo: add help, list, and forget arguments
+  // todo: add count, help, list, and forget arguments
   if (args.length < 3) {
-    message.channel.send(`Arguments Missing: Usage **${botClient.config.prefix}remindme** [@Role or role_id] [how long ex. 4h20m / timestamp] *things to remember*`);
+    message.channel.send(`Usage **${botClient.config.prefix}remindrole** [@Role or role] [how long: 4h20m / timestamp] *thing to remember*`);
     return;
   }
   let roleMention;
@@ -37,33 +37,37 @@ function RemindroleCommand(botClient, message, args) {
   else {
     let foundRole = message.guild.roles.cache.find(role => role.name.toLowerCase() === args[0].toLowerCase());
     if (!foundRole) {
-      message.channel.send(`Failed to lookup role_id.`);
+      message.channel.send(`Role lookup failed.`);
       return;
     }
     roleMention = `<@&${foundRole.id}>`;
   }
-  SaveReminder(botClient, message.channel, args[1], roleMention, args.slice(2).join(' '));
+  SaveReminder(botClient, message.channel, args[1], roleMention, args.slice(2).join(' '), `<@!${message.author.id}>`);
 }
 
-function SaveReminder(botClient, channel, remindWhen, remindFor, remindWhat) {
+function SaveReminder(botClient, channel, remindWhen, remindWho, remindWhat, remindFrom = null) {
   let remindMilli;
   // if any symbols or spaces try Date() to parse absolute time, works best with ISO 8601
-  // will also accept something like '02/22/2022@02:22:22 PM EDT'
+  // will also accept stuff like '02/22/2022@02:22:22 PM EDT' or YYYY-MM-DD
   if (/\W/.test(remindWhen)) {
     remindMilli = new Date(remindWhen).getTime();
     if (isNaN(remindMilli)) {
-      message.channel.send(`Absolute date string invalid.`);
+      channel.send(`Absolute timestamp \`${remindWhen}\` is invalid.`);
       return;
     }
     else if (remindMilli < new Date().getTime()) {
-      message.channel.send(`Absolute date can not be in the past.`);
+      channel.send(`Absolute timestamp \`${remindWhen}\` seems to be ${((new Date().getTime() - remindMilli) / YEAR).toFixed(2)} years in the past.`);
       return;
     }
   }
   else {
     // parse relative time
     remindMilli = new Date().getTime();
-    let relativeArr = remindWhen.toLowerCase().match(/[0-9]+[a-z]/g);
+    const relativeArr = remindWhen.toLowerCase().match(/[0-9]+[a-z]/g);
+    if (!relativeArr) {
+      channel.send(`Relative date format invalid.`);
+      return;
+    }
     for (const timeSpan of relativeArr) {
       switch (timeSpan.slice(-1)) {
         case 'y':
@@ -85,7 +89,7 @@ function SaveReminder(botClient, channel, remindWhen, remindFor, remindWhat) {
           remindMilli += parseInt(timeSpan) * SEC;
           break;
         default:
-          message.channel.send(`Reletive date format invalid.`);
+          channel.send(`Relative date format invalid.`);
           return;
       }
     }
@@ -98,7 +102,8 @@ function SaveReminder(botClient, channel, remindWhen, remindFor, remindWhat) {
       id: nextId,
       time: remindMilli,
       channel: channel.id,
-      for: remindFor,
+      for: remindWho,
+      from: remindFrom,
       content: remindWhat
     }
   );
@@ -107,22 +112,22 @@ function SaveReminder(botClient, channel, remindWhen, remindFor, remindWhat) {
   // if it is coming up soon queue it without delay
   if (remindMilli - new Date().getTime() < 12 * MIN) {
     activeTimeouts[nextId] = setTimeout(() => {
-      channel.send(`:outbox_tray: ${remindFor} ${remindWhat}`);
+      channel.send(`:outbox_tray: ${remindWho}${(remindFrom) ? `(${remindFrom})` : ''} ${remindWhat}`);
       DeleteReminder(botClient, nextId);
     }, Math.max(remindMilli - new Date().getTime(), 500));
   }
 
   const remindDate = new Date(remindMilli);
-  const timeZoneShort = remindDate.toLocaleTimeString('en-us', { timeZoneName: 'short' }).split(' ')[2]
-  channel.send(`:inbox_tray: reminder #${nextId} set for ${format(remindDate, 'dddd, MMMM Do YYYY, hh:mm:ss a')} **${timeZoneShort}**`)
+  const timeZoneShort = remindDate.toLocaleTimeString('en-us', { timeZoneName: 'short' }).split(' ')[2];
+  channel.send(`:inbox_tray: reminder #${nextId} set for ${format(remindDate, 'dddd, MMMM Do YYYY, h:mm:ssa')} **${timeZoneShort}**`);
 }
 
 function CheckForUpcoming(botClient) {
-  let poppingSoon = botClient.config.reminders.filter(r => r.time < new Date().getTime() + (6 * MIN));
-  for (reminder of poppingSoon) {
+  const poppingSoon = botClient.config.reminders.filter(r => r.time < new Date().getTime() + (6 * MIN));
+  for (const reminder of poppingSoon) { // could cause ratelimiting if we ever have a large 0 delay backlog
     if (!activeTimeouts[reminder.id]) {
       activeTimeouts[reminder.id] = setTimeout(() => {
-        botClient.channels.fetch(reminder.channel).then(channel => channel.send(`:outbox_tray: ${reminder.for} ${reminder.content}`));
+        botClient.channels.fetch(reminder.channel).then(channel => channel.send(`:outbox_tray: ${reminder.for}${(reminder.from) ? `(${reminder.from})` : ''} ${reminder.content}`));
         DeleteReminder(botClient, reminder.id);
       }, Math.max(reminder.time - new Date().getTime(), 0));
     }
