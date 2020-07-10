@@ -109,7 +109,11 @@ botClient.on('message', (message) => {
     botEvents.emit('onMessage', botClient, message);
   }
   else {
-    // we got one, parse command and args
+    // command get, parse and execute if it exists
+    if (message.content.length === 1 || message.content.charAt(1) === botClient.config.prefix) {
+      return; // do nothing if just the prefix or it is repeated
+    }
+
     let command = '';
     let args = [];
     if (message.content.split(' ').length > 1) {
@@ -124,7 +128,7 @@ botClient.on('message', (message) => {
       botClient.commands[command](botClient, message, args);
     }
     else if (botClient.config.missingCommandReply) {
-      message.channel.send(`Command: \`${command}\` not found.`);
+      message.channel.send(`Command: \`${botClient.config.prefix}${command}\` not found.`);
     }
   }
 });
