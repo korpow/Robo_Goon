@@ -11,6 +11,7 @@
   "homepage": "https://github.com/korpow/robo-goon",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "^12.2.0"
+    "discord.js": "^12.2.0",
+    "fecha": "^4.2.0"
   }
 }

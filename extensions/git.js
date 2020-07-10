@@ -22,6 +22,5 @@ exports.commands = {
 };
 
 function PrintGitLatestLog(botClient, message) {
-  botClient.config.githubLogUrl = ""; // todo: delete this line when discord supports inline named link Markdown
-  message.channel.send(`Running ${(botClient.config.githubLogUrl) ? `[commit](${botClient.config.githubLogUrl + gitStatus.log.substr(0, 7)})` : 'commit'}: \`${gitStatus.log}\` ${(gitStatus.workingClean) ? '' : '*+ changes*'}`);
+  message.channel.send(`Running commit: \`${gitStatus.log}\` ${(gitStatus.workingClean) ? '' : '*+ changes*'}`);
 }

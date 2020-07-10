@@ -28,9 +28,9 @@ botClient.config = {
   botSelfRole: "Robomin",
   botAdminRole: "Robomin",
   missingCommandReply: true,
-  githubLogUrl: "",
   notoRoles: {},
-  customCommands: {}
+  customCommands: {},
+  reminders: []
 };
 
 botClient.commands = {};
@@ -83,12 +83,13 @@ fs.readdir('./extensions/', (err, files) => {
       botEvents.on('extInit', ext.Init);
     }
   });
-  botEvents.emit('extInit', botClient);
   console.log(`Extension loading complete!`);
+  botClient.login(secrets.token);
 });
 
 botClient.on('ready', () => {
   console.log(`Bot client connection ready!`);
+  botEvents.emit('extInit', botClient);
 });
 
 botClient.on('guildCreate', (guild) => {
@@ -132,5 +133,3 @@ botClient.on('message', (message) => {
     }
   }
 });
-
-botClient.login(secrets.token);
