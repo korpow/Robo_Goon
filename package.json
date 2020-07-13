@@ -12,6 +12,7 @@
   "license": "MIT",
   "dependencies": {
     "discord.js": "^12.2.0",
-    "fecha": "^4.2.0"
+    "fecha": "^4.2.0",
+    "poker-odds": "^1.0.1"
   }
 }
