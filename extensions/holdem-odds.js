@@ -9,10 +9,6 @@ function CalcOdds(botClient, message, args) {
     message.channel.send(`Usage **${botClient.config.prefix}handeval** \`[hand] {...more hands} {board}\`\nA hand is 2 cards with value and suit ex. 5hTd (5 of Hearts, 10 of Diamonds). The optional Board is 3 or more cards hyphen separated ex. Ac-2d-3c-4s\nRunning a single hand outputs hand rank odds at showdown. Multiple hands output the win/tie/loss odds for each.`);
     return;
   }
-  if (args[0].length != 4) {
-    // todo: no hands input error
-    return;
-  }
   let embedReply = {
     title: "Hand: hand [vs hand vs hand]",
     // "description": "```diff\n+ Win    11.11%\n- Lose   11.11%\n= Tie    22.22%```",
@@ -52,9 +48,10 @@ function CalcOdds(botClient, message, args) {
     return;
   }
   try {
-    const results = calculateEquity(hands, board);
+    const results = calculateEquity(hands, board, botClient.config.handevalIterations);
     const playedHands = results[0].count;
-    embedReply.footer.text = `Total hands played: ${playedHands}`;
+    embedReply.footer.text = `Total boards dealt: ${playedHands}`;
+
     if (hands.length === 1) {
       // single hand
       embedReply.title = `Hand: ${args[0]}${(board) ? `\nBoard: ${board.join('')}` : ''}`;
@@ -78,7 +75,6 @@ function CalcOdds(botClient, message, args) {
       }
       embedReply.title = `Hands: ${hands.map(hand => hand.join('')).join(' vs ')}${(board) ? `\nBoard: ${board.join('')}` : ''}`;
       embedReply.description = `Favourite Hand: ${(favHand) ? `**${favHand}** :tada:` : `**none?**`}`;
-
     }
 
     message.channel.send({ embed: embedReply });

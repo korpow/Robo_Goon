@@ -29,6 +29,7 @@ botClient.config = {
   botSelfRole: "Robomin",
   botAdminRole: "Robomin",
   missingCommandReply: true,
+  handevalIterations: 100000,
   notoRoles: {},
   customCommands: {},
   reminders: []
