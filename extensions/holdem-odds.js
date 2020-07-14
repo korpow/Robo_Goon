@@ -6,7 +6,7 @@ exports.commands = {
 
 function CalcOdds(botClient, message, args) {
   if (args.length < 1) {
-    message.channel.send(`Usage **${botClient.config.prefix}handeval** \`[hand] {...more hands} {board}\`\nA hand is 2 cards with value and suit ex. 5hTd (5 of Hearts, 10 of Diamonds). The optional Board is 3 or more cards hyphen separated ex. Ac-2d-3c-4s\nRunning a single hand outputs hand rank odds at showdown. Multiple hands output the win/tie/loss odds for each.`);
+    message.channel.send(`Usage **${botClient.config.prefix}handeval** \`[hand] {...more hands} {board}\`\nA hand is 2 cards with value and suit ex. 5hTd (5 of Hearts, 10 of Diamonds). The optional Board is 3 or more cards hyphen separated ex. Ac-2d-3c-4s\nRunning a single hand outputs hand rank odds at showdown. Multiple hands output the win/tie odds for each.`);
     return;
   }
   let embedReply = {
@@ -39,12 +39,13 @@ function CalcOdds(botClient, message, args) {
       board = arg.split('-');
     }
     else {
-      // todo: bad board arg error
+      // totally invalid argument detected
+      message.channel.send(`handeval error: An input hand or board is invalid. Run **${botClient.config.prefix}handeval** for instructions.`);
       return;
     }
   }
   if (hands.length > 20) {
-    // todo: too many hands error
+    message.channel.send(`handeval error: No more than 20 hands can be evaluated at once.`);
     return;
   }
   try {
@@ -66,7 +67,7 @@ function CalcOdds(botClient, message, args) {
       for (hand of results) {
         embedReply.fields.push({
           name: hand.hand.join(''),
-          value: `\`\`\`diff\n+ Win   ${sigFigs((hand.wins / playedHands) * 100, 3)}%\n= Tie   ${sigFigs((hand.ties / playedHands) * 100, 3)}%\n- Lose  ${sigFigs(((playedHands - (hand.wins + hand.ties)) / playedHands) * 100, 3)}%\`\`\``,
+          value: `\`\`\`diff\n+ Wins  ${sigFigs((hand.wins / playedHands) * 100, 3)}%\n= Ties  ${sigFigs((hand.ties / playedHands) * 100, 3)}%\`\`\``,
           inline: true
         });
         if (hand.favourite) {
@@ -79,7 +80,7 @@ function CalcOdds(botClient, message, args) {
 
     message.channel.send({ embed: embedReply });
   } catch (error) {
-    message.channel.send(`Error from poker-odds package: ${error}`);
+    message.channel.send(`handeval error from poker-odds package: ${error}`);
   }
 }
 
